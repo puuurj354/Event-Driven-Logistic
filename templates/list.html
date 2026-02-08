@@ -1,0 +1,42 @@
+{{define "todo-list"}}
+    {{range .Todos}}
+    <div class="group flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+        <div class="flex items-center gap-4">
+            <!-- Toggle Checkbox -->
+            <!-- hx-post: Toggle completion status -->
+            <!-- hx-target: Update the entire todo list -->
+            <input type="checkbox" 
+                   {{if .Completed}}checked{{end}}
+                   hx-post="/todos/{{.ID}}/toggle"
+                   hx-target="#todo-list"
+                   hx-swap="innerHTML"
+                   class="w-5 h-5 text-indigo-500 rounded-lg border-2 border-gray-300 focus:ring-indigo-500 focus:ring-2 cursor-pointer">
+            
+            <!-- Todo Title -->
+            <span class="{{if .Completed}}line-through text-gray-400{{else}}text-gray-700{{end}} text-lg">
+                {{.Title}}
+            </span>
+        </div>
+        
+        <!-- Delete Button -->
+        <!-- hx-delete: Send DELETE request -->
+        <!-- hx-confirm: Show confirmation dialog -->
+        <button hx-delete="/todos/{{.ID}}"
+                hx-target="#todo-list"
+                hx-swap="innerHTML"
+                hx-confirm="Delete '{{.Title}}'?"
+                class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+        </button>
+    </div>
+    {{else}}
+    <div class="text-center py-8 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <p class="italic">No todos yet. Add one above!</p>
+    </div>
+    {{end}}
+{{end}}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event-Driven-Logistic - HTMX Todo App</title>
+    
+    <!-- HTMX: The core library for HTML-over-the-wire -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    
+    <!-- Tailwind CSS: Utility-first CSS framework -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        /* HTMX loading indicator styles */
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 200ms ease-in;
+        }
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+        .htmx-request.htmx-indicator {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 min-h-screen py-12">
+    <div class="max-w-lg mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">✅ Todo List</h1>
+            <p class="text-gray-500">Powered by Go + HTMX</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+            
+            <!-- Add Todo Form -->
+            <!-- hx-post: Send POST request to /todos -->
+            <!-- hx-target: Update the #todo-list element with response -->
+            <!-- hx-swap: Replace innerHTML of target -->
+            <!-- hx-indicator: Show spinner during request -->
+            <form hx-post="/todos" 
+                  hx-target="#todo-list" 
+                  hx-swap="innerHTML"
+                  hx-indicator="#add-spinner"
+                  class="flex gap-3 mb-6">
+                <input type="text" 
+                       name="title" 
+                       placeholder="What needs to be done?" 
+                       required
+                       autocomplete="off"
+                       class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all">
+                <button type="submit" 
+                        class="bg-indigo-500 text-white px-6 py-3 rounded-xl hover:bg-indigo-600 active:bg-indigo-700 transition-colors font-semibold flex items-center gap-2">
+                    <span>Add</span>
+                    <!-- Loading spinner (hidden by default) -->
+                    <svg id="add-spinner" class="htmx-indicator animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+            
+            <!-- Todo List Container -->
+            <!-- This div will be updated by HTMX responses -->
+            <div id="todo-list" class="space-y-3">
+                {{template "todo-list" .}}
+            </div>
+            
+            <!-- Footer -->
+            <div class="mt-6 pt-4 border-t text-center text-sm text-gray-400">
+                <span>{{len .Todos}} items</span>
+            </div>
+        </div>
+        
+        <!-- Info Card -->
+        <div class="mt-6 bg-white/50 rounded-xl p-4 text-sm text-gray-600">
+            <p class="font-semibold mb-2">🚀 HTMX Features Used:</p>
+            <ul class="list-disc list-inside space-y-1">
+                <li><code class="bg-gray-100 px-1 rounded">hx-post</code> - Add new todos</li>
+                <li><code class="bg-gray-100 px-1 rounded">hx-delete</code> - Remove todos</li>
+                <li><code class="bg-gray-100 px-1 rounded">hx-target</code> - Update specific element</li>
+                <li><code class="bg-gray-100 px-1 rounded">hx-swap</code> - Control HTML insertion</li>
+                <li><code class="bg-gray-100 px-1 rounded">hx-indicator</code> - Loading states</li>
+                <li><code class="bg-gray-100 px-1 rounded">hx-confirm</code> - Confirm before delete</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
