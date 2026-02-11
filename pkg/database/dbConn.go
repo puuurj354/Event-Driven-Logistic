@@ -3,12 +3,14 @@ package database
 import (
 	"log"
 
+	"github.com/purnama/Event-Driven-Logistic/pkg/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func ConnectDB(dsn string) *gorm.DB {
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+func ConnectDB() *gorm.DB {
+	cfg := config.LoadConfig()
+	db, err := gorm.Open(postgres.Open(cfg.Database.URL), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}

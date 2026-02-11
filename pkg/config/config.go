@@ -49,3 +49,4 @@ func LoadConfig() *Config {
 
 	return config
 }
+

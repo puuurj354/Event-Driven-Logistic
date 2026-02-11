@@ -3,11 +3,13 @@ package broker
 import (
 	"log"
 
+	"github.com/purnama/Event-Driven-Logistic/pkg/config"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func ConnectRabbitMQ(url string) *amqp.Connection {
-	conn, err := amqp.Dial(url)
+func ConnectRabbitMQ() *amqp.Connection {
+	cfg := config.LoadConfig()
+	conn, err := amqp.Dial(cfg.RabbitMQ.URL)
 	if err != nil {
 		log.Fatal("Failed to connect to RabbitMQ:", err)
 	}
