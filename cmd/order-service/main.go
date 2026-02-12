@@ -1,19 +1,24 @@
 package main
 
 import (
-	"fmt"
-
+	"github.com/gin-gonic/gin"
+	"github.com/purnama/Event-Driven-Logistic/internal/order/delivery"
+	"github.com/purnama/Event-Driven-Logistic/internal/order/repository"
 	"github.com/purnama/Event-Driven-Logistic/pkg/config"
 	"github.com/purnama/Event-Driven-Logistic/pkg/database"
 )
 
 func main() {
-
 	cfg := config.LoadConfig()
-	cfg.PrintConfig()
+	db := database.InitPostgres(cfg.Database.URL)
 
-	_ = database.InitPostgres(cfg.Database.URL)
+	db.AutoMigrate(&repository.Order{})
 
-	fmt.Println("Order Service is running...")
+	repo := repository.NewOrderRepository(db)
+	handler := delivery.NewOrderHandler(repo)
 
+	r := gin.Default()
+	r.POST("/orders", handler.CreateOrder)
+
+	r.Run(":" + cfg.Server.Port)
 }

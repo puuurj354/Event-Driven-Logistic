@@ -39,7 +39,7 @@
 
 ## 🚀 Project Overview: Event-Driven Logistics Platform
 
-Proyek ini adalah simulasi sistem logistik (pengiriman barang/makanan) skala mikro yang dibangun dengan arsitektur **Microservices** berbasis **Event-Driven**. Fokus utama proyek ini adalah menangani sinkronisasi data antar layanan secara asinkron (tidak saling menunggu) dan memberikan pembaruan status secara *real-time* kepada pengguna.
+Proyek ini adalah simulasi sistem logistik sederhana (pengiriman barang/makanan) skala mikro yang dibangun dengan arsitektur **Microservices** berbasis **Event-Driven**. Fokus utama proyek ini adalah menangani sinkronisasi data antar layanan secara asinkron (tidak saling menunggu) dan memberikan pembaruan status secara *real-time* kepada pengguna.
 
 ### 🛠️ Tech Stack
 
