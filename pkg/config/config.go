@@ -27,8 +27,7 @@ type ServerConfig struct {
 	Port string
 }
 
-// LoadConfig membaca file .env dari direktori saat ini
-// Setiap service akan memanggil ini dari direktori cmd/{service-name}/
+
 func LoadConfig() *Config {
 	// Try to find .env in current directory first
 	viper.SetConfigName(".env")
@@ -112,7 +111,7 @@ func getCurrentDir() string {
 	return dir
 }
 
-// PrintConfig mencetak konfigurasi untuk debugging (hide sensitive data)
+
 func (c *Config) PrintConfig() {
 	fmt.Println("📋 Current Configuration:")
 	fmt.Printf("   Database: %s\n", maskURL(c.Database.URL))
