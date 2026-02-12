@@ -6,28 +6,60 @@
 help:
 	@echo "📦 Event-Driven Logistic System - Available Commands:"
 	@echo ""
-	@echo "  Docker Commands:"
-	@echo "    make docker-up          - Start all Docker containers (RabbitMQ + 4 PostgreSQL DBs)"
-	@echo "    make docker-down        - Stop all Docker containers"
-	@echo "    make docker-logs        - Show Docker logs"
-	@echo "    make docker-clean       - Stop containers and remove volumes"
-	@echo ""
-	@echo "  Database Commands:"
-	@echo "    make migrate            - Run all database migrations"
-	@echo "    make db-status          - Check database connections"
-	@echo ""
-	@echo "  Development Commands:"
+	@echo "  🏠 LOCAL Development (No Docker):"
+	@echo "    make setup-local        - Setup local PostgreSQL databases (4 DBs)"
+	@echo "    make migrate-local      - Run migrations to local PostgreSQL"
+	@echo "    make local-db-status    - Check local database connections"
 	@echo "    make run-order          - Run Order Service locally"
 	@echo "    make run-payment        - Run Payment Service locally"
 	@echo "    make run-inventory      - Run Inventory Service locally"
 	@echo "    make run-notification   - Run Notification Service locally"
 	@echo ""
-	@echo "  Testing:"
+	@echo "  🐳 DOCKER Development:"
+	@echo "    make docker-up          - Start all Docker containers (RabbitMQ + 4 PostgreSQL DBs)"
+	@echo "    make docker-down        - Stop all Docker containers"
+	@echo "    make docker-logs        - Show Docker logs"
+	@echo "    make docker-clean       - Stop containers and remove volumes"
+	@echo "    make migrate-docker     - Run migrations to Docker containers"
+	@echo ""
+	@echo "  🧪 Testing:"
 	@echo "    make test               - Run all tests"
 	@echo "    make test-coverage      - Run tests with coverage"
 	@echo ""
 
+# ========================================
+# LOCAL Development Commands
+# ========================================
+
+setup-local:
+	@echo "🏠 Setting up local PostgreSQL databases..."
+	@chmod +x scripts/setup-local-db.sh
+	@./scripts/setup-local-db.sh
+
+migrate-local:
+	@echo "🔄 Running migrations to local databases..."
+	@chmod +x scripts/migrate-local.sh
+	@./scripts/migrate-local.sh
+
+local-db-status:
+	@echo "🔍 Checking LOCAL database connections..."
+	@echo ""
+	@echo "Order DB (localhost:5432):"
+	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_order -c "SELECT 'Connected ✅' as status;" 2>/dev/null || echo "❌ Not connected"
+	@echo ""
+	@echo "Payment DB (localhost:5432):"
+	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_payment -c "SELECT 'Connected ✅' as status;" 2>/dev/null || echo "❌ Not connected"
+	@echo ""
+	@echo "Inventory DB (localhost:5432):"
+	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_inventory -c "SELECT 'Connected ✅' as status, COUNT(*) as products FROM products;" 2>/dev/null || echo "❌ Not connected"
+	@echo ""
+	@echo "Notification DB (localhost:5432):"
+	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_notification -c "SELECT 'Connected ✅' as status;" 2>/dev/null || echo "❌ Not connected"
+
+# ========================================
 # Docker commands
+# ========================================
+
 docker-up:
 	@echo "🐳 Starting Docker containers..."
 	cd deployments && docker-compose up -d
@@ -54,26 +86,10 @@ docker-clean:
 	cd deployments && docker-compose down -v
 	@echo "✅ Cleanup complete!"
 
-# Database commands
-migrate:
-	@echo "🔄 Running database migrations..."
+migrate-docker:
+	@echo "🔄 Running database migrations to Docker containers..."
 	@chmod +x scripts/migrate.sh
 	@./scripts/migrate.sh
-
-db-status:
-	@echo "🔍 Checking database connections..."
-	@echo ""
-	@echo "Order DB (port 5432):"
-	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_order -c "SELECT 'Order DB Connected' as status;" 2>/dev/null || echo "❌ Not connected"
-	@echo ""
-	@echo "Payment DB (port 5433):"
-	@PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d db_payment -c "SELECT 'Payment DB Connected' as status;" 2>/dev/null || echo "❌ Not connected"
-	@echo ""
-	@echo "Inventory DB (port 5434):"
-	@PGPASSWORD=postgres psql -h localhost -p 5434 -U postgres -d db_inventory -c "SELECT 'Inventory DB Connected' as status;" 2>/dev/null || echo "❌ Not connected"
-	@echo ""
-	@echo "Notification DB (port 5435):"
-	@PGPASSWORD=postgres psql -h localhost -p 5435 -U postgres -d db_notification -c "SELECT 'Notification DB Connected' as status;" 2>/dev/null || echo "❌ Not connected"
 
 # Service run commands
 run-order:
