@@ -3,51 +3,75 @@ version: '3.8'
 services:
   order-service:
     build:
-      context: .
+      context: ..
       dockerfile: deployments/Dockerfile.order
     ports:
-      - "8081:8080"
+      - "8081:8081"
     environment:
-      - DB_URL=${DB_URL}
-      - MQ_URL=${MQ_URL}
+      - DB_URL=postgres://postgres:postgres@postgres-order:5432/db_order?sslmode=disable
+      - MQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PORT=8081
     networks:
       - logistic-network
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   payment-service:
     build:
-      context: .
+      context: ..
       dockerfile: deployments/Dockerfile.payment
     ports:
-      - "8082:8080"
+      - "8082:8082"
     environment:
-      - DB_URL=${DB_URL}
-      - MQ_URL=${MQ_URL}
+      - DB_URL=postgres://postgres:postgres@postgres-payment:5432/db_payment?sslmode=disable
+      - MQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PORT=8082
     networks:
       - logistic-network
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   inventory-service:
     build:
-      context: .
+      context: ..
       dockerfile: deployments/Dockerfile.inventory
     ports:
-      - "8083:8080"
+      - "8084:8084"
     environment:
-      - DB_URL=${DB_URL}
-      - MQ_URL=${MQ_URL}
+      - DB_URL=postgres://postgres:postgres@postgres-inventory:5432/db_inventory?sslmode=disable
+      - MQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PORT=8084
     networks:
       - logistic-network
+    depends_on:
+      postgres-inventory:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   notification-service:
     build:
-      context: .
+      context: ..
       dockerfile: deployments/Dockerfile.notification
     ports:
-      - "8084:8080"
+      - "8083:8083"
     environment:
-      - DB_URL=${DB_URL}
-      - MQ_URL=${MQ_URL}
+      - DB_URL=postgres://postgres:postgres@postgres-notification:5432/db_notification?sslmode=disable
+      - MQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - PORT=8083
     networks:
       - logistic-network
+    depends_on:
+      postgres-notification:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -56,18 +80,98 @@ services:
       - "15672:15672"
     networks:
       - logistic-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  postgres:
+  # Database untuk Order Service
+  postgres-order:
     image: postgres:15
+    container_name: postgres-order
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: logistic_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_order
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-order-data:/var/lib/postgresql/data
     networks:
       - logistic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database untuk Payment Service
+  postgres-payment:
+    image: postgres:15
+    container_name: postgres-payment
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_payment
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-payment-data:/var/lib/postgresql/data
+    networks:
+      - logistic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database untuk Inventory Service
+  postgres-inventory:
+    image: postgres:15
+    container_name: postgres-inventory
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_inventory
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-inventory-data:/var/lib/postgresql/data
+    networks:
+      - logistic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database untuk Notification Service
+  postgres-notification:
+    image: postgres:15
+    container_name: postgres-notification
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_notification
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-notification-data:/var/lib/postgresql/data
+    networks:
+      - logistic-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   logistic-network:
     driver: bridge
+
+volumes:
+  postgres-order-data:
+  postgres-payment-data:
+  postgres-inventory-data:
+  postgres-notification-data:
