@@ -7,9 +7,6 @@ help:
 	@echo "📦 Event-Driven Logistic System - Available Commands:"
 	@echo ""
 	@echo "  🏠 LOCAL Development (No Docker):"
-	@echo "    make setup-local        - Setup local PostgreSQL databases (4 DBs)"
-	@echo "    make migrate-local      - Run migrations to local PostgreSQL"
-	@echo "    make local-db-status    - Check local database connections"
 	@echo "    make run-order          - Run Order Service locally"
 	@echo "    make run-payment        - Run Payment Service locally"
 	@echo "    make run-inventory      - Run Inventory Service locally"
@@ -27,34 +24,6 @@ help:
 	@echo "    make test-coverage      - Run tests with coverage"
 	@echo ""
 
-# ========================================
-# LOCAL Development Commands
-# ========================================
-
-setup-local:
-	@echo "🏠 Setting up local PostgreSQL databases..."
-	@chmod +x scripts/setup-local-db.sh
-	@./scripts/setup-local-db.sh
-
-migrate-local:
-	@echo "🔄 Running migrations to local databases..."
-	@chmod +x scripts/migrate-local.sh
-	@./scripts/migrate-local.sh
-
-local-db-status:
-	@echo "🔍 Checking LOCAL database connections..."
-	@echo ""
-	@echo "Order DB (localhost:5432):"
-	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_order -c "SELECT 'Connected ✅' as status;" 2>/dev/null || echo "❌ Not connected"
-	@echo ""
-	@echo "Payment DB (localhost:5432):"
-	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_payment -c "SELECT 'Connected ✅' as status;" 2>/dev/null || echo "❌ Not connected"
-	@echo ""
-	@echo "Inventory DB (localhost:5432):"
-	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_inventory -c "SELECT 'Connected ✅' as status, COUNT(*) as products FROM products;" 2>/dev/null || echo "❌ Not connected"
-	@echo ""
-	@echo "Notification DB (localhost:5432):"
-	@PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d db_notification -c "SELECT 'Connected ✅' as status;" 2>/dev/null || echo "❌ Not connected"
 
 # ========================================
 # Docker commands
