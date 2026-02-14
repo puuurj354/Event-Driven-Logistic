@@ -1,92 +1,1083 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event-Driven-Logistic </title>
-    
-    <!-- HTMX: The core library for HTML-over-the-wire -->
+    <title>🚀 Logistic Command Center</title>
+    <meta name="description" content="Real-time Event-Driven Logistic Dashboard">
+
+    <!-- HTMX: HTML-over-the-wire -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    
-    <!-- Tailwind CSS: Utility-first CSS framework -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+
+    <!-- Google Fonts: Inter for clean modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
     <style>
-        /* HTMX loading indicator styles */
+        /* ============================================================
+           Design System: Dark Mode + Glassmorphism + Neon Accents
+           ============================================================ */
+
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #111128;
+            --bg-card: rgba(17, 17, 40, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #e4e4f0;
+            --text-secondary: #8888aa;
+            --text-muted: #555577;
+            --accent-blue: #4f8dff;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --accent-cyan: #06b6d4;
+            --glow-blue: 0 0 20px rgba(79, 141, 255, 0.3);
+            --glow-green: 0 0 20px rgba(16, 185, 129, 0.3);
+            --glow-purple: 0 0 20px rgba(139, 92, 246, 0.3);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(79, 141, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.04) 0%, transparent 70%);
+            animation: bgPulse 8s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes bgPulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* ── Layout ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 32px 0;
+        }
+
+        .header h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.live {
+            background: var(--accent-green);
+            box-shadow: var(--glow-green);
+        }
+
+        .status-dot.rabbitmq {
+            background: var(--accent-amber);
+        }
+
+        .status-dot.ws {
+            background: var(--accent-blue);
+            box-shadow: var(--glow-blue);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8);
+            }
+        }
+
+        /* ── Grid Layout ── */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Glass Card ── */
+        .card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border-glass);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-header .icon {
+            font-size: 1.2rem;
+        }
+
+        .card-body {
+            padding: 20px 24px;
+        }
+
+        /* ── Create Order Form ── */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(79, 141, 255, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+            box-shadow: var(--glow-blue);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 30px rgba(79, 141, 255, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            color: white;
+            box-shadow: var(--glow-green);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            width: auto;
+        }
+
+        /* Loading indicator */
         .htmx-indicator {
             opacity: 0;
-            transition: opacity 200ms ease-in;
+            transition: opacity 200ms;
         }
-        .htmx-request .htmx-indicator {
-            opacity: 1;
-        }
+
+        .htmx-request .htmx-indicator,
         .htmx-request.htmx-indicator {
             opacity: 1;
         }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Event Timeline ── */
+        .timeline {
+            max-height: 500px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-glass) transparent;
+        }
+
+        .timeline::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .timeline::-webkit-scrollbar-thumb {
+            background: var(--border-glass);
+            border-radius: 2px;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-glass);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .event-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .event-icon.order {
+            background: rgba(79, 141, 255, 0.15);
+        }
+
+        .event-icon.payment-ok {
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .event-icon.payment-fail {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .event-icon.stock {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .event-icon.delivery {
+            background: rgba(6, 182, 212, 0.15);
+        }
+
+        .event-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-body .msg {
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .event-body .meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .event-body .order-id {
+            font-size: 0.72rem;
+            color: var(--accent-blue);
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+
+        /* ── Order Status Card ── */
+        .order-result {
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            margin-top: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .order-result.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .order-result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .order-result .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .order-result .value {
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+        }
+
+        .badge-paid {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+        }
+
+        .badge-shipped {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent-cyan);
+        }
+
+        .badge-cancelled {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 0.88rem;
+        }
+
+        /* ── Full-width card ── */
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* ── Micro-interactions ── */
+        .flash {
+            animation: flash 0.5s ease;
+        }
+
+        @keyframes flash {
+            0% {
+                background: rgba(79, 141, 255, 0.2);
+            }
+
+            100% {
+                background: transparent;
+            }
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card .number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Connection status toast */
+        #ws-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        #ws-status.connected {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-green);
+        }
+
+        #ws-status.disconnected {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--accent-red);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 min-h-screen py-12">
-    <div class="max-w-lg mx-auto">
+
+<body>
+    <div class="container">
         <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">✅ Todo List</h1>
-            <p class="text-gray-500">Powered by Go + HTMX</p>
+        <div class="header">
+            <h1>⚡ Logistic Command Center</h1>
+            <p>Real-Time Event-Driven Microservice Dashboard</p>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot live"></span>
+                    <span>System Live</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot rabbitmq"></span>
+                    <span>RabbitMQ</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot ws" id="ws-dot"></span>
+                    <span id="ws-label">WebSocket</span>
+                </div>
+            </div>
         </div>
 
-        <!-- Main Card -->
-        <div class="bg-white rounded-2xl shadow-xl p-6">
-            
-            <!-- Add Todo Form -->
-            <!-- hx-post: Send POST request to /todos -->
-            <!-- hx-target: Update the #todo-list element with response -->
-            <!-- hx-swap: Replace innerHTML of target -->
-            <!-- hx-indicator: Show spinner during request -->
-            <form hx-post="/todos" 
-                  hx-target="#todo-list" 
-                  hx-swap="innerHTML"
-                  hx-indicator="#add-spinner"
-                  class="flex gap-3 mb-6">
-                <input type="text" 
-                       name="title" 
-                       placeholder="What needs to be done?" 
-                       required
-                       autocomplete="off"
-                       class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all">
-                <button type="submit" 
-                        class="bg-indigo-500 text-white px-6 py-3 rounded-xl hover:bg-indigo-600 active:bg-indigo-700 transition-colors font-semibold flex items-center gap-2">
-                    <span>Add</span>
-                    <!-- Loading spinner (hidden by default) -->
-                    <svg id="add-spinner" class="htmx-indicator animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </button>
-            </form>
-            
-            <!-- Todo List Container -->
-            <!-- This div will be updated by HTMX responses -->
-            <div id="todo-list" class="space-y-3">
-                {{template "todo-list" .}}
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="number" id="stat-events">0</div>
+                <div class="label">Events</div>
             </div>
-            
-            <!-- Footer -->
-            <div class="mt-6 pt-4 border-t text-center text-sm text-gray-400">
-                <span>{{len .Todos}} items</span>
+            <div class="stat-card">
+                <div class="number" id="stat-orders">0</div>
+                <div class="label">Orders</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-payments">0</div>
+                <div class="label">Payments</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="stat-shipments">0</div>
+                <div class="label">Shipments</div>
             </div>
         </div>
-        
-        <!-- Info Card -->
-        <div class="mt-6 bg-white/50 rounded-xl p-4 text-sm text-gray-600">
-            <p class="font-semibold mb-2">🚀 HTMX Features Used:</p>
-            <ul class="list-disc list-inside space-y-1">
-                <li><code class="bg-gray-100 px-1 rounded">hx-post</code> - Add new todos</li>
-                <li><code class="bg-gray-100 px-1 rounded">hx-delete</code> - Remove todos</li>
-                <li><code class="bg-gray-100 px-1 rounded">hx-target</code> - Update specific element</li>
-                <li><code class="bg-gray-100 px-1 rounded">hx-swap</code> - Control HTML insertion</li>
-                <li><code class="bg-gray-100 px-1 rounded">hx-indicator</code> - Loading states</li>
-                <li><code class="bg-gray-100 px-1 rounded">hx-confirm</code> - Confirm before delete</li>
-            </ul>
+
+        <!-- Main Grid -->
+        <div class="grid">
+            <!-- Left Column: Create Order -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="icon">📦</span>
+                    <h2>Buat Pesanan Baru</h2>
+                </div>
+                <div class="card-body">
+                    <form id="order-form" onsubmit="return createOrder(event)">
+                        <div class="form-group">
+                            <label>Customer ID</label>
+                            <input type="text" id="customer_id" placeholder="user-001" value="user-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nama Item</label>
+                            <input type="text" id="item_name" placeholder="Laptop ASUS ROG" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input type="number" id="quantity" placeholder="1" value="1" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Total Harga (Rp)</label>
+                                <input type="number" id="total_price" placeholder="15000000" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btn-order">
+                            <span>🚀 Buat Pesanan</span>
+                            <span class="spinner htmx-indicator" id="order-spinner"></span>
+                        </button>
+                    </form>
+                    <!-- Order result -->
+                    <div id="order-result"></div>
+
+                    <!-- Confirm Payment Section -->
+                    <div id="payment-section"
+                        style="display:none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-glass);">
+                        <div class="card-header" style="padding: 0 0 12px 0; border: none;">
+                            <span class="icon">💳</span>
+                            <h2>Konfirmasi Pembayaran</h2>
+                        </div>
+                        <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">
+                            Payment ID: <span id="payment-id-display"
+                                style="color: var(--accent-green); font-family: 'JetBrains Mono', monospace;"></span>
+                        </p>
+                        <button onclick="confirmPayment()" class="btn btn-success" id="btn-pay">
+                            <span>💳 Bayar Sekarang</span>
+                            <span class="spinner" id="pay-spinner" style="display:none;"></span>
+                        </button>
+                        <div id="payment-result"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Event Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="icon">⚡</span>
+                    <h2>Live Event Timeline</h2>
+                    <span style="margin-left: auto; font-size: 0.75rem; color: var(--text-muted);" id="event-count">0
+                        events</span>
+                </div>
+                <div class="card-body">
+                    <div class="timeline" id="timeline">
+                        <div class="empty-state" id="empty-timeline">
+                            <div class="icon">📡</div>
+                            <p>Menunggu event dari RabbitMQ...</p>
+                            <p style="margin-top: 6px; font-size: 0.78rem;">Buat pesanan untuk memulai</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full-Width: Order Tracking -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <span class="icon">🔍</span>
+                    <h2>Order Tracking</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-row" style="align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Order ID</label>
+                            <input type="text" id="track-order-id" placeholder="Paste Order ID di sini...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <button onclick="trackOrder()" class="btn btn-primary" style="margin-top: 0;">
+                                🔍 Track
+                            </button>
+                        </div>
+                    </div>
+                    <div id="tracking-result" style="margin-top: 16px;"></div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- WebSocket Status Toast -->
+    <div id="ws-status" class="disconnected">🔴 Disconnected</div>
+
+    <script>
+        // ================================================================
+        // JavaScript — WebSocket Connection + HTMX-like Interactions
+        // ================================================================
+
+        // -- State --
+        let ws = null;               // WebSocket connection
+        let eventCount = 0;          // Total events received
+        let orderCount = 0;          // Total orders
+        let paymentCount = 0;        // Total payments
+        let shipmentCount = 0;       // Total shipments
+        let currentOrderId = null;   // Last created order ID
+        let currentPaymentId = null; // Payment ID for confirming
+
+        // -- Config: API Gateway URL --
+        // Semua request melalui Nginx reverse proxy (single entry point)
+        const API_BASE = 'http://localhost:8080/api';
+        const ORDER_URL = API_BASE;     // /api/orders/* → Order Service
+        const PAYMENT_URL = API_BASE;   // /api/payments/* → Payment Service
+        const DELIVERY_URL = API_BASE;  // /api/shipments/* → Delivery Service
+
+        // ── WebSocket Connection ──
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'; // Auto detect protocol
+            const wsUrl = protocol + '//' + location.host + '/ws';             // Same host as page
+            ws = new WebSocket(wsUrl);                                          // Connect
+
+            ws.onopen = function () {
+                console.log('✅ WebSocket connected');                           // Log
+                document.getElementById('ws-status').className = 'connected';   // Status toast
+                document.getElementById('ws-status').textContent = '🟢 Connected'; // Update text
+                document.getElementById('ws-dot').style.background = 'var(--accent-green)'; // Dot green
+                document.getElementById('ws-label').textContent = 'WebSocket Connected'; // Label
+            };
+
+            ws.onmessage = function (evt) {
+                try {
+                    const data = JSON.parse(evt.data);   // Parse JSON event
+                    addEventToTimeline(data);              // Render di timeline
+                    updateStats(data.event_type);          // Update statistik
+                    handleEventSideEffects(data);          // Auto-actions
+                } catch (e) {
+                    console.error('Failed to parse WS message:', e); // Error handling
+                }
+            };
+
+            ws.onclose = function () {
+                console.log('🔴 WebSocket disconnected, reconnecting in 3s...'); // Log
+                document.getElementById('ws-status').className = 'disconnected'; // Status toast
+                document.getElementById('ws-status').textContent = '🔴 Reconnecting...'; // Text
+                document.getElementById('ws-dot').style.background = 'var(--accent-red)'; // Dot red
+                setTimeout(connectWebSocket, 3000);                               // Auto-reconnect
+            };
+
+            ws.onerror = function (err) {
+                console.error('WebSocket error:', err);   // Log error
+            };
+        }
+
+        // ── Create Order (via fetch to Order Service) ──
+        function createOrder(e) {
+            e.preventDefault();                             // Prevent form default
+            const btn = document.getElementById('btn-order'); // Button ref
+            btn.disabled = true;                             // Disable saat loading
+            document.getElementById('order-spinner').style.display = 'inline-block'; // Show spinner
+
+            const payload = {
+                customer_id: document.getElementById('customer_id').value,       // Input value
+                item_name: document.getElementById('item_name').value,           // Input value
+                quantity: parseInt(document.getElementById('quantity').value),     // Parse int
+                total_price: parseFloat(document.getElementById('total_price').value) // Parse float
+            };
+
+            fetch(ORDER_URL + '/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        currentOrderId = data.data.ID;                              // Simpan order ID
+                        document.getElementById('track-order-id').value = currentOrderId; // Auto-fill tracker
+                        orderCount++;                                                 // Increment counter
+                        document.getElementById('stat-orders').textContent = orderCount; // Update stat
+
+                        document.getElementById('order-result').innerHTML = `
+                        <div class="order-result success">
+                            <div class="label">Order Created</div>
+                            <div class="value">${currentOrderId}</div>
+                            <div style="margin-top: 8px;">
+                                <span class="badge badge-pending">PENDING</span>
+                                <span style="font-size: 0.78rem; color: var(--text-secondary); margin-left: 8px;">
+                                    Rp ${Number(payload.total_price).toLocaleString('id-ID')}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+
+                        // Auto-check for payment after 2 seconds (event propagation delay)
+                        setTimeout(() => checkPaymentForOrder(currentOrderId), 2000);
+                    } else {
+                        document.getElementById('order-result').innerHTML = `
+                        <div class="order-result error">
+                            <div class="label">Error</div>
+                            <div class="value">${data.message}</div>
+                        </div>
+                    `;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('order-result').innerHTML = `
+                    <div class="order-result error">
+                        <div class="label">Network Error</div>
+                        <div class="value">${err.message}</div>
+                    </div>
+                `;
+                })
+                .finally(() => {
+                    btn.disabled = false;                                              // Re-enable
+                    document.getElementById('order-spinner').style.display = 'none';   // Hide spinner
+                });
+
+            return false; // Prevent default
+        }
+
+        // ── Check Payment (auto after order created) ──
+        function checkPaymentForOrder(orderId) {
+            fetch(PAYMENT_URL + '/payments/' + orderId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success' && data.data) {
+                        currentPaymentId = data.data.id;                                // Simpan payment ID
+                        document.getElementById('payment-id-display').textContent = currentPaymentId;
+                        document.getElementById('payment-section').style.display = 'block'; // Show pay button
+                    }
+                })
+                .catch(() => { }); // Silent fail — payment mungkin belum terbuat
+        }
+
+        // ── Confirm Payment ──
+        function confirmPayment() {
+            if (!currentPaymentId) return;                                          // Guard
+            const btn = document.getElementById('btn-pay');
+            btn.disabled = true;
+            document.getElementById('pay-spinner').style.display = 'inline-block';
+
+            fetch(PAYMENT_URL + '/payments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_id: currentPaymentId })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        paymentCount++;
+                        document.getElementById('stat-payments').textContent = paymentCount;
+                        document.getElementById('payment-result').innerHTML = `
+                        <div class="order-result success" style="margin-top: 12px;">
+                            <div class="label">Payment Confirmed</div>
+                            <div class="value">
+                                <span class="badge badge-paid">COMPLETED</span>
+                                <span style="font-size: 0.78rem; color: var(--text-secondary); margin-left: 8px;">
+                                    Rp ${Number(data.data.amount).toLocaleString('id-ID')}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                        btn.textContent = '✅ Pembayaran Berhasil';
+                        btn.style.pointerEvents = 'none';
+                    } else {
+                        document.getElementById('payment-result').innerHTML = `
+                        <div class="order-result error" style="margin-top: 12px;">
+                            <div class="value">${data.message}</div>
+                        </div>
+                    `;
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('payment-result').innerHTML = `
+                    <div class="order-result error" style="margin-top: 12px;">
+                        <div class="value">${err.message}</div>
+                    </div>
+                `;
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    document.getElementById('pay-spinner').style.display = 'none';
+                });
+        }
+
+        // ── Track Order ──
+        function trackOrder() {
+            const orderId = document.getElementById('track-order-id').value.trim();
+            if (!orderId) return;
+
+            const container = document.getElementById('tracking-result');
+            container.innerHTML = '<p style="color: var(--text-secondary);">Loading...</p>';
+
+            // Fetch from all services in parallel
+            Promise.all([
+                fetch(ORDER_URL + '/orders/' + orderId).then(r => r.json()).catch(() => null),
+                fetch(PAYMENT_URL + '/payments/' + orderId).then(r => r.json()).catch(() => null),
+                fetch(DELIVERY_URL + '/shipments/' + orderId).then(r => r.json()).catch(() => null)
+            ]).then(([order, payment, shipment]) => {
+                let html = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">';
+
+                // Order
+                if (order && order.status === 'success') {
+                    const d = order.data;
+                    const badgeClass = d.Status === 'PAID' ? 'badge-paid' : d.Status === 'PENDING' ? 'badge-pending' : 'badge-shipped';
+                    html += `
+                        <div class="order-result success">
+                            <div class="label">📦 Order</div>
+                            <div style="margin-top: 6px;"><span class="badge ${badgeClass}">${d.Status}</span></div>
+                            <div class="value" style="margin-top: 6px;">${d.ItemName} × ${d.Quantity}</div>
+                            <div style="font-size: 0.78rem; color: var(--text-secondary);">Rp ${Number(d.TotalPrice).toLocaleString('id-ID')}</div>
+                        </div>
+                    `;
+                } else {
+                    html += '<div class="order-result error"><div class="label">📦 Order</div><div class="value">Not found</div></div>';
+                }
+
+                // Payment
+                if (payment && payment.status === 'success') {
+                    const p = payment.data;
+                    const pBadge = p.status === 'COMPLETED' ? 'badge-paid' : 'badge-pending';
+                    html += `
+                        <div class="order-result success">
+                            <div class="label">💳 Payment</div>
+                            <div style="margin-top: 6px;"><span class="badge ${pBadge}">${p.status}</span></div>
+                            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;">Rp ${Number(p.amount).toLocaleString('id-ID')}</div>
+                        </div>
+                    `;
+                } else {
+                    html += '<div class="order-result error"><div class="label">💳 Payment</div><div class="value">Not found</div></div>';
+                }
+
+                // Shipment
+                if (shipment && shipment.status === 'success') {
+                    const s = shipment.data;
+                    html += `
+                        <div class="order-result success">
+                            <div class="label">🚚 Shipment</div>
+                            <div style="margin-top: 6px;"><span class="badge badge-shipped">${s.status}</span></div>
+                            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;">Courier: ${s.courier_name}</div>
+                        </div>
+                    `;
+                } else {
+                    html += '<div class="order-result" style="background: rgba(255,255,255,0.02); border: 1px dashed var(--border-glass); padding: 16px; border-radius: var(--radius-sm);"><div class="label">🚚 Shipment</div><div class="value" style="color: var(--text-muted);">Awaiting payment</div></div>';
+                }
+
+                html += '</div>';
+                container.innerHTML = html;
+            });
+        }
+
+        // ── Event Timeline Rendering ──
+        function addEventToTimeline(data) {
+            const timeline = document.getElementById('timeline');
+            const empty = document.getElementById('empty-timeline');
+            if (empty) empty.remove(); // Remove empty state
+
+            // Determine icon class
+            let iconClass = 'order';
+            let icon = '📦';
+            if (data.event_type === 'payment.success') { iconClass = 'payment-ok'; icon = '💳'; }
+            else if (data.event_type === 'payment.failed') { iconClass = 'payment-fail'; icon = '❌'; }
+            else if (data.event_type.startsWith('stock.')) { iconClass = 'stock'; icon = '📦'; }
+
+            const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            item.innerHTML = `
+                <div class="event-icon ${iconClass}">${icon}</div>
+                <div class="event-body">
+                    <div class="msg">${data.message}</div>
+                    <div class="order-id">${data.order_id || 'N/A'}</div>
+                    <div class="meta">${data.event_type} · ${now}</div>
+                </div>
+            `;
+
+            timeline.insertBefore(item, timeline.firstChild); // Newest first
+
+            // Update event counter
+            eventCount++;
+            document.getElementById('stat-events').textContent = eventCount;
+            document.getElementById('event-count').textContent = eventCount + ' events';
+
+            // Keep max 50 items
+            while (timeline.children.length > 50) {
+                timeline.removeChild(timeline.lastChild);
+            }
+        }
+
+        // ── Update Stats ──
+        function updateStats(eventType) {
+            if (eventType === 'payment.success') {
+                shipmentCount++; // payment.success triggers shipment creation
+                document.getElementById('stat-shipments').textContent = shipmentCount;
+            }
+        }
+
+        // ── Handle side effects from events ──
+        function handleEventSideEffects(data) {
+            // Auto-refresh tracking if current order matches
+            if (currentOrderId && data.order_id === currentOrderId) {
+                setTimeout(trackOrder, 500); // Refresh tracking after 0.5s
+            }
+        }
+
+        // ── Initialize ──
+        connectWebSocket(); // Start WebSocket connection on page load
+    </script>
 </body>
+
 </html>

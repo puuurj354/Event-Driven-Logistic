@@ -1,16 +1,17 @@
 package main
 
 import (
-	"log" 
+	"log"
 
-	"github.com/gin-gonic/gin"                                             
-	"github.com/purnama/Event-Driven-Logistic/internal/payment/dellivery"  
-	"github.com/purnama/Event-Driven-Logistic/internal/payment/event"      
-	"github.com/purnama/Event-Driven-Logistic/internal/payment/repository" 
-	"github.com/purnama/Event-Driven-Logistic/internal/payment/service"    
-	"github.com/purnama/Event-Driven-Logistic/pkg/broker"                  
-	"github.com/purnama/Event-Driven-Logistic/pkg/config"                  
-	"github.com/purnama/Event-Driven-Logistic/pkg/database"                
+	"github.com/gin-gonic/gin"
+	"github.com/purnama/Event-Driven-Logistic/internal/payment/dellivery"
+	"github.com/purnama/Event-Driven-Logistic/internal/payment/event"
+	"github.com/purnama/Event-Driven-Logistic/internal/payment/repository"
+	"github.com/purnama/Event-Driven-Logistic/internal/payment/service"
+	"github.com/purnama/Event-Driven-Logistic/pkg/broker"
+	"github.com/purnama/Event-Driven-Logistic/pkg/config"
+	"github.com/purnama/Event-Driven-Logistic/pkg/database"
+	"github.com/purnama/Event-Driven-Logistic/pkg/middleware"
 )
 
 func main() {
@@ -51,6 +52,7 @@ func main() {
 
 	handler := dellivery.NewPaymentHandler(paymentSvc, paymentPublisher)
 	router := gin.Default()
+	router.Use(middleware.CORSMiddleware()) // CORS untuk dashboard
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "healthy", "service": "payment-service", "version": "1.0.0"})

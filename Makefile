@@ -1,6 +1,6 @@
 # Makefile untuk Event-Driven Logistic System
 
-.PHONY: help docker-up docker-down docker-logs migrate test clean run-order run-payment run-inventory run-notification
+.PHONY: help docker-up docker-down docker-logs migrate test clean run-order run-payment run-inventory run-notification run-delivery run-all gateway-start gateway-stop gateway-reload
 
 # Default target
 help:
@@ -77,6 +77,19 @@ run-notification:
 	@echo "🚀 Running Notification Service on port 8083..."
 	cd cmd/notification-service && go run main.go
 
+run-delivery:
+	@echo "🚀 Running Delivery Service on port 8085..."
+	cd cmd/delivery-service && go run main.go
+
+run-all:
+	@echo "🚀 Starting ALL services concurrently..."
+	@$(MAKE) run-order & \
+	 $(MAKE) run-payment & \
+	 $(MAKE) run-inventory & \
+	 $(MAKE) run-delivery & \
+	 $(MAKE) run-notification & \
+	 wait
+
 # Testing
 test:
 	@echo "🧪 Running tests..."
@@ -103,3 +116,39 @@ clean:
 	@rm -rf bin/
 	@rm -f coverage.out coverage.html
 	@echo "✅ Clean complete!"
+
+# ── API Gateway (Nginx Reverse Proxy) ──
+# Menjalankan Nginx sebagai reverse proxy pada port 8080
+
+# Start Nginx gateway (local, non-root)
+gateway-start:
+	@echo "🚪 Starting API Gateway (Nginx) on port 8080..."
+	@nginx -c $(PWD)/deployments/nginx.conf
+	@echo "✅ API Gateway started: http://localhost:8080"
+
+# Stop Nginx gateway
+gateway-stop:
+	@echo "🛑 Stopping API Gateway..."
+	@nginx -c $(PWD)/deployments/nginx.conf -s quit 2>/dev/null || true
+	@echo "✅ API Gateway stopped"
+
+# Reload Nginx config (tanpa downtime)
+gateway-reload:
+	@echo "🔄 Reloading API Gateway config..."
+	@nginx -c $(PWD)/deployments/nginx.conf -s reload
+	@echo "✅ API Gateway config reloaded"
+
+# Seed inventory with test products
+seed-products:
+	@echo "🌱 Seeding inventory products..."
+	@curl -s -X POST http://localhost:8080/api/products \
+		-H "Content-Type: application/json" \
+		-d '{"name":"Laptop ASUS ROG","stock":100}' | jq .
+	@curl -s -X POST http://localhost:8080/api/products \
+		-H "Content-Type: application/json" \
+		-d '{"name":"iPhone 15 Pro","stock":50}' | jq .
+	@curl -s -X POST http://localhost:8080/api/products \
+		-H "Content-Type: application/json" \
+		-d '{"name":"Samsung Galaxy S24","stock":75}' | jq .
+	@echo "✅ Products seeded!"
+

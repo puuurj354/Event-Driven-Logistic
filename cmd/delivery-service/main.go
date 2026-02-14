@@ -1,18 +1,17 @@
 package main
 
-
-
 import (
-	"log" 
+	"log"
 
-	"github.com/gin-gonic/gin"                                                      
-	"github.com/purnama/Event-Driven-Logistic/internal/delivery/dellivery"           
-	deliveryEvent "github.com/purnama/Event-Driven-Logistic/internal/delivery/event" 
-	"github.com/purnama/Event-Driven-Logistic/internal/delivery/repository"          
-	"github.com/purnama/Event-Driven-Logistic/internal/delivery/service"             
-	"github.com/purnama/Event-Driven-Logistic/pkg/broker"                            
-	"github.com/purnama/Event-Driven-Logistic/pkg/config"                            
-	"github.com/purnama/Event-Driven-Logistic/pkg/database"                          
+	"github.com/gin-gonic/gin"
+	"github.com/purnama/Event-Driven-Logistic/internal/delivery/dellivery"
+	deliveryEvent "github.com/purnama/Event-Driven-Logistic/internal/delivery/event"
+	"github.com/purnama/Event-Driven-Logistic/internal/delivery/repository"
+	"github.com/purnama/Event-Driven-Logistic/internal/delivery/service"
+	"github.com/purnama/Event-Driven-Logistic/pkg/broker"
+	"github.com/purnama/Event-Driven-Logistic/pkg/config"
+	"github.com/purnama/Event-Driven-Logistic/pkg/database"
+	"github.com/purnama/Event-Driven-Logistic/pkg/middleware"
 )
 
 func main() {
@@ -40,13 +39,14 @@ func main() {
 		log.Fatalf("❌ Failed to create consumer: %v", err)
 	}
 	delConsumer := deliveryEvent.NewDeliveryConsumer(consumer, shipmentSvc)
-	if err := delConsumer.StartListening(); err != nil {                   
+	if err := delConsumer.StartListening(); err != nil {
 		log.Fatalf("❌ Failed to start delivery consumer: %v", err)
 	}
 
 	handler := dellivery.NewShipmentHandler(shipmentSvc)
 
 	router := gin.Default()
+	router.Use(middleware.CORSMiddleware()) // CORS untuk dashboard
 
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "healthy", "service": "delivery-service", "version": "1.0.0"})

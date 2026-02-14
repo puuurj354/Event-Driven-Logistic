@@ -9,15 +9,25 @@ import (
 	"github.com/purnama/Event-Driven-Logistic/internal/inventory/repository"
 )
 
+// InventoryService mendefinisikan kontrak bisnis logic untuk Inventory.
+// Semua method mengembalikan error jika operasi gagal.
 type InventoryService interface {
+	// CreateProduct menambahkan produk baru ke inventory.
+	CreateProduct(name string, stock int) (*repository.Product, error)
+
+	// ListProducts mengambil daftar produk dengan pagination.
 	ListProducts(limit, offset int) ([]repository.Product, error)
 
+	// GetProductByID mengambil produk berdasarkan ID.
 	GetProductByID(id uint) (*repository.Product, error)
 
+	// ReserveStock mereservasi stok untuk sebuah order.
 	ReserveStock(orderID uuid.UUID, productName string, quantity int) (*repository.StockReservation, error)
 
+	// ConfirmReservation mengkonfirmasi reservasi stok.
 	ConfirmReservation(orderID string) error
 
+	// ReleaseReservation mengembalikan stok yang direservasi.
 	ReleaseReservation(orderID string) error
 }
 
@@ -34,6 +44,36 @@ func NewInventoryService(
 		productRepo:     productRepo,
 		reservationRepo: reservationRepo,
 	}
+}
+
+// CreateProduct menambahkan produk baru ke inventory.
+// Parameter: name — nama produk (wajib), stock — jumlah stok awal (>= 0).
+// Return: product yang berhasil dibuat, atau error jika validasi gagal.
+func (s *inventoryService) CreateProduct(name string, stock int) (*repository.Product, error) {
+	// Validasi nama produk — tidak boleh kosong
+	if name == "" {
+		return nil, errors.New("nama produk tidak boleh kosong") // Guard clause
+	}
+
+	// Validasi stok awal — tidak boleh negatif
+	if stock < 0 {
+		return nil, errors.New("stok awal tidak boleh negatif") // Guard clause
+	}
+
+	// Buat entity produk baru
+	product := &repository.Product{
+		Name:  name,  // Nama produk dari parameter
+		Stock: stock, // Stok awal dari parameter
+	}
+
+	// Simpan ke database via repository
+	if err := s.productRepo.CreateProduct(product); err != nil {
+		log.Printf("❌ Gagal membuat produk: name=%s, error=%v", name, err) // Log error
+		return nil, fmt.Errorf("gagal membuat produk: %w", err)            // Wrap error
+	}
+
+	log.Printf("✅ Produk berhasil dibuat: ID=%d, Name=%s, Stock=%d", product.ID, name, stock) // Log sukses
+	return product, nil                                                                       // Return produk baru
 }
 
 func (s *inventoryService) ListProducts(limit, offset int) ([]repository.Product, error) {

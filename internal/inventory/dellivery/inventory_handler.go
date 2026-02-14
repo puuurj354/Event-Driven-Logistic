@@ -1,94 +1,100 @@
 package dellivery
 
-// ============================================================================
-// Inventory HTTP Handler — Presentation Layer
-// ============================================================================
-//
-// Logic Overview:
-// Menangani request HTTP terkait produk dan stok.
-// Endpoint:
-//   GET /products     → Daftar semua produk (dengan pagination)
-//   GET /products/:id → Detail satu produk
-// ============================================================================
+
 
 import (
-	"net/http" // HTTP status codes
-	"strconv"  // Konversi string ke integer
+	"net/http" 
+	"strconv"  
 
-	"github.com/gin-gonic/gin"                                            // Gin web framework
-	"github.com/purnama/Event-Driven-Logistic/internal/inventory/service" // Service layer
-	"github.com/purnama/Event-Driven-Logistic/pkg/response"               // Standar response format
+	"github.com/gin-gonic/gin"                                            
+	"github.com/purnama/Event-Driven-Logistic/internal/inventory/service" 
+	"github.com/purnama/Event-Driven-Logistic/pkg/response"               
 )
 
-// InventoryHandler menangani semua HTTP request terkait Inventory/Product.
+
 type InventoryHandler struct {
-	svc service.InventoryService // Dependency: service layer
+	svc service.InventoryService 
 }
 
-// NewInventoryHandler membuat instance baru InventoryHandler.
-// Parameter: svc — InventoryService interface (dependency injection).
-// Return: pointer ke InventoryHandler.
+
 func NewInventoryHandler(svc service.InventoryService) *InventoryHandler {
-	return &InventoryHandler{svc: svc} // Inject service ke handler
+	return &InventoryHandler{svc: svc} 
 }
 
-// ListProducts menangani GET /products — daftar produk.
-//
-// Query Params (opsional):
-//
-//	?limit=20  — jumlah item per halaman (default: 20)
-//	?offset=0  — mulai dari item ke-berapa (default: 0)
-//
-// Response: 200 OK dengan array produk.
+
 func (h *InventoryHandler) ListProducts(c *gin.Context) {
-	// Parse query params dengan default value
-	limitStr := c.DefaultQuery("limit", "20")  // Default 20 item per halaman
-	offsetStr := c.DefaultQuery("offset", "0") // Default mulai dari awal
+	
+	limitStr := c.DefaultQuery("limit", "20")  
+	offsetStr := c.DefaultQuery("offset", "0") 
 
-	// Konversi string ke integer
-	limit, err := strconv.Atoi(limitStr) // Parse limit
+	
+	limit, err := strconv.Atoi(limitStr) 
 	if err != nil {
-		limit = 20 // Fallback ke default jika parsing gagal
+		limit = 20 
 	}
 
-	offset, err := strconv.Atoi(offsetStr) // Parse offset
+	offset, err := strconv.Atoi(offsetStr) 
 	if err != nil {
-		offset = 0 // Fallback ke default jika parsing gagal
+		offset = 0 
 	}
 
-	// Panggil service
-	products, err := h.svc.ListProducts(limit, offset) // Delegasi ke service
+
+	products, err := h.svc.ListProducts(limit, offset) 
 	if err != nil {
-		response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar produk") // 500
-		return                                                                             // Stop execution
+		response.Error(c, http.StatusInternalServerError, "Gagal mengambil daftar produk") 
+		return                                                                             
 	}
 
-	// Kirim response sukses
-	response.Success(c, "Daftar produk berhasil diambil", products) // 200 OK
+	
+	response.Success(c, "Daftar produk berhasil diambil", products) 
 }
 
-// GetProductByID menangani GET /products/:id — detail produk.
-//
-// URL Params:
-//
-//	:id — ID produk (integer)
+
 func (h *InventoryHandler) GetProductByID(c *gin.Context) {
-	idStr := c.Param("id") // Ambil ":id" dari URL
+	idStr := c.Param("id") 
 
-	// Parse string ke uint
-	id, err := strconv.ParseUint(idStr, 10, 32) // Konversi string → uint
+	
+	id, err := strconv.ParseUint(idStr, 10, 32) 
 	if err != nil {
-		response.Error(c, http.StatusBadRequest, "Format ID tidak valid") // 400
-		return                                                            // Stop execution
+		response.Error(c, http.StatusBadRequest, "Format ID tidak valid") 
+		return                                                            
 	}
 
-	// Panggil service
-	product, err := h.svc.GetProductByID(uint(id)) // Delegasi ke service (cast ke uint)
+	
+	product, err := h.svc.GetProductByID(uint(id)) 
 	if err != nil {
-		response.Error(c, http.StatusNotFound, "Produk tidak ditemukan") // 404
-		return                                                           // Stop execution
+		response.Error(c, http.StatusNotFound, "Produk tidak ditemukan") 
+		return                                                           
 	}
 
-	// Kirim response sukses
-	response.Success(c, "Produk ditemukan", product) // 200 OK
+	
+	response.Success(c, "Produk ditemukan", product) 
+}
+
+func (h *InventoryHandler) CreateProduct(c *gin.Context) {
+	
+	var req struct {
+		Name  string `json:"name" binding:"required"`  
+		Stock int    `json:"stock" binding:"required"` 
+	}
+
+	
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, http.StatusBadRequest, "Format request tidak valid: "+err.Error()) 
+		return                                                                               
+	}
+
+	
+	product, err := h.svc.CreateProduct(req.Name, req.Stock) 
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, "Gagal membuat produk: "+err.Error()) 
+		return                                                                                  
+	}
+
+	
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,                     
+		"message": "Produk berhasil dibuat", 
+		"data":    product,                  
+	})
 }
