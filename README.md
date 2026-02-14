@@ -101,6 +101,29 @@ Proyek ini menggunakan standar **Standard Go Project Layout** untuk memastikan k
 
 ---
 
+### Routes
+
+* **Order Service**: http://localhost:8080
+POST /orders : Membuat pesanan baru (Memicu event order.created).
+
+GET /orders/:id : Mengecek status pesanan secara mendetail.
+
+GET /orders/user/:user_id : Melihat riwayat pesanan milik user tertentu.
+* **Inventory Service**: http://localhost:8081
+GET /products : Melihat daftar produk dan sisa stok.
+
+GET /products/:id : Melihat detail produk spesifik.
+* **Payment Service**: http://localhost:8082
+POST /payments : Mengirim konfirmasi pembayaran (Memicu event payment.success).
+
+GET /payments/:order_id : Melihat status pembayaran untuk satu pesanan.
+* **Delivery Service**: http://localhost:8083
+GET /shipments/:order_id : Mengambil data koordinat kurir terakhir dan estimasi tiba.
+
+PATCH /shipments/:id/status : Mengubah status pengiriman (misal: dari PICKING_UP ke ON_THE_WAY).
+* **Notification Service**: http://localhost:8084
+GET /ws : Endpoint WebSocket agar Frontend bisa berlangganan update lokasi/status secara langsung.
+
 ## Dependency
 
 * **Web Framework**: github.com/gin-gonic/gin
