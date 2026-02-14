@@ -32,7 +32,7 @@ type Shipment struct {
 	CurrentLong float64        `gorm:"type:decimal(11,8)" json:"current_long"`
 	Status      ShipmentStatus `gorm:"type:varchar(20);default:PICKING_UP;not null" json:"status"`
 	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"` // Record last update timestamp
+	UpdatedAt   time.Time      `json:"updated_at"` 
 }
 
 func (s *Shipment) BeforeCreate(tx *gorm.DB) (err error) {
